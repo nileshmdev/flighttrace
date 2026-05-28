@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+::-webkit-scrollbar-track { background: transparent; }
+
+@layer components {
+  /* Glass panel — backdrop card used for TopHud and map overlays */
+  .panel {
+    @apply backdrop-blur-2xl rounded-xl;
+    background: linear-gradient(135deg, rgba(28,34,48,0.58), rgba(10,14,20,0.48));
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.7),
+                0 1px 0 0 rgba(255,255,255,0.06) inset,
+                0 -1px 0 0 rgba(0,0,0,0.3) inset;
+  }
+
+  /* Lighter glass for nested rows/tight containers */
+  .panel-tight {
+    @apply backdrop-blur-xl rounded-lg;
+    background: rgba(14,20,32,0.6);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Flush top-bar glass (no rounding, full-width border-b) */
+  .panel-bar {
+    background: linear-gradient(135deg, rgba(12,19,32,0.96), rgba(8,12,18,0.94));
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+
+  /* Typography */
+  .stat-label {
+    @apply text-[9.5px] uppercase tracking-[0.2em] font-medium;
+    color: #4f5b6e;
+  }
+  .stat-value {
+    @apply text-hud-text font-mono font-semibold tabular-nums;
+  }
+
+  /* Ghost button */
+  .btn {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 cursor-pointer;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    color: #eaf1fb;
+  }
+  .btn:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(167,139,250,0.4);
+    transform: translateY(-1px);
+  }
+  .btn:active { transform: translateY(0); }
+
+  /* Gradient primary button */
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all duration-150 cursor-pointer;
+    background:
+      radial-gradient(circle at 30% 0%, rgba(255,255,255,0.22), transparent 60%),
+      linear-gradient(135deg, #a78bfa, #6d4dff);
+    border: none;
+    color: white;
+    box-shadow: 0 8px 26px -6px rgba(167,139,250,0.5), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+  .btn-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px -6px rgba(167,139,250,0.65), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+
+  /* Small icon-only buttons — glass gradient matching card background */
+  .map-btn {
+    @apply flex items-center justify-center transition-all duration-150 cursor-pointer rounded-lg;
+    background: linear-gradient(135deg, rgba(28,34,48,0.52), rgba(10,14,20,0.42));
+    border: 1px solid rgba(255,255,255,0.07);
+    color: #eaf1fb;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 0 0 rgba(255,255,255,0.05) inset;
+  }
+  .map-btn:hover {
+    background: linear-gradient(135deg, rgba(40,50,72,0.65), rgba(16,22,34,0.55));
+    border-color: rgba(167,139,250,0.4);
+    color: #a78bfa;
+    box-shadow: 0 0 18px -4px rgba(167,139,250,0.35), 0 4px 16px rgba(0,0,0,0.3), 0 1px 0 0 rgba(255,255,255,0.06) inset;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium;
+    border: 1px solid rgba(255,255,255,0.11);
+    background: rgba(255,255,255,0.03);
+    color: #8fa0b8;
+  }
+  .disabled-field {
+    @apply opacity-30 grayscale pointer-events-none;
+  }
+
+  /* Status pill (TopHud) */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px]
+           font-semibold tracking-wider uppercase;
+  }
+
+  /* Info card (right panel + bottom stat cards) */
+  .card {
+    @apply backdrop-blur-xl rounded-xl px-3 pt-2.5 pb-3;
+    background: linear-gradient(135deg, rgba(28,34,48,0.52), rgba(10,14,20,0.42));
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.42),
+                0 1px 0 0 rgba(255,255,255,0.05) inset;
+  }
+  .card-header {
+    @apply flex items-center justify-between mb-2.5;
+  }
+  .card-title {
+    @apply text-[9.5px] font-semibold tracking-[0.2em] uppercase;
+    color: #4f5b6e;
+  }
+  .stat-grid {
+    @apply grid grid-cols-2 gap-x-3 gap-y-2.5;
+  }
+  .stat-item { @apply flex flex-col gap-0.5; }
+  .stat-row  { @apply flex items-baseline gap-1; }
+  .stat-num  {
+    @apply text-xl font-mono font-semibold tabular-nums leading-none;
+    color: #eaf1fb;
+  }
+  .stat-unit {
+    @apply text-[10px] font-medium leading-none;
+    color: #4f5b6e;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold
+           tracking-wider uppercase;
+    border: 1px solid;
+  }
+  .badge-ok {
+    @apply text-hud-ok;
+    background: rgba(52,211,153,0.12);
+    border-color: rgba(52,211,153,0.28);
+  }
+  .badge-warn {
+    @apply text-hud-warn;
+    background: rgba(251,191,36,0.12);
+    border-color: rgba(251,191,36,0.28);
+  }
+  .badge-danger {
+    @apply text-hud-danger;
+    background: rgba(251,113,133,0.12);
+    border-color: rgba(251,113,133,0.28);
+  }
+
+  /* Gradient progress-bar fills — used inside h-* track containers */
+  .bar-ok {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #34d399, #6ee7b7);
+    box-shadow: 0 0 10px rgba(52,211,153,0.4);
+    transition: width 0.3s ease;
+  }
+  .bar-warn {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #fbbf24, #fcd34d);
+    box-shadow: 0 0 10px rgba(251,191,36,0.4);
+    transition: width 0.3s ease;
+  }
+  .bar-danger {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #fb7185, #fda4af);
+    box-shadow: 0 0 10px rgba(251,113,133,0.4);
+    animation: bar-blink 1.6s ease-in-out infinite;
+    transition: width 0.3s ease;
+  }
+  .bar-mute {
+    @apply h-full rounded-full bg-hud-border;
+    transition: width 0.3s ease;
+  }
+  .bar-accent {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #a78bfa, #22d3ee);
+    box-shadow: 0 0 8px rgba(167,139,250,0.35);
+    transition: width 0.1s ease;
+  }
+
+  /* Transport interface chip (TopHud) */
+  .transport-chip {
+    @apply flex items-center gap-2 rounded-lg px-3 cursor-pointer;
+    height: 36px;
+    background: linear-gradient(135deg, rgba(28,34,48,0.52), rgba(10,14,20,0.42));
+    border: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 0 0 rgba(255,255,255,0.05) inset;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .transport-chip:hover:not(:disabled) {
+    border-color: rgba(167,139,250,0.4);
+  }
+  .transport-chip:disabled {
+    cursor: default;
+  }
+  .transport-chip-open {
+    border-color: rgba(167,139,250,0.55) !important;
+    background: linear-gradient(135deg, rgba(40,50,72,0.65), rgba(16,22,34,0.55)) !important;
+  }
+  /* Dropdown option — selected state */
+  .transport-option-active {
+    background: linear-gradient(180deg, rgba(167,139,250,0.14), rgba(167,139,250,0.06));
+    box-shadow: inset 0 0 0 1px rgba(167,139,250,0.28);
+  }
+  .transport-select {
+    @apply outline-none cursor-pointer text-hud-text;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    font-size: 12px;
+    font-family: "JetBrains Mono", monospace;
+    letter-spacing: 0.04em;
+    min-width: 0;
+    flex: 1;
+  }
+  .transport-select option {
+    background: #0c1320;
+    color: #eaf1fb;
+  }
+
+  /* Settings form input/select */
+  .settings-input {
+    @apply rounded-md px-3 py-1.5 text-sm font-mono outline-none transition-all;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    color: #eaf1fb;
+  }
+  .settings-input:focus {
+    border-color: rgba(167,139,250,0.5);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.12);
+  }
+}
+
+@keyframes bar-blink { 50% { opacity: 0.5; } }
+
+/* Dropdown panel enter/leave (transport picker) */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+
+/* OpenLayers dark tweaks */
+.ol-zoom { display: none; }
+.ol-attribution {
+  background: rgba(5, 7, 9, 0.78) !important;
+  color: #4f5b6e !important;
+  font-size: 10px;
+}
+.ol-attribution a { color: #4f5b6e !important; }

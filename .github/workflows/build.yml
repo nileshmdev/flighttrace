@@ -1,0 +1,151 @@
+name: FlightTrace CI
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │  Triggers                                                               │
+# │  • push a v* tag  → deploy GitHub Pages + build desktop apps           │
+# │  • manual trigger → same                                                │
+# └─────────────────────────────────────────────────────────────────────────┘
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to attach files to GitHub Releases
+  pages: write      # needed to deploy to GitHub Pages
+  id-token: write   # needed by deploy-pages action
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# ── JOB 1: build the Vite web app and upload as a Pages artifact ──────────
+jobs:
+  web-build:
+    name: Build web app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: dist
+
+# ── JOB 2: deploy the Pages artifact to GitHub Pages ─────────────────────
+  deploy-web:
+    name: Deploy to GitHub Pages
+    needs: web-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5.0.0
+
+# ── JOB 3: build Electron desktop apps (only on tag push or manual run) ──
+  desktop:
+    name: Desktop — ${{ matrix.artifact_name }}
+    needs: web-build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build_args: --linux AppImage --x64
+            artifact_name: linux-x64
+            artifact_glob: release/*.AppImage
+
+          - os: macos-latest
+            build_args: --mac dmg --universal
+            artifact_name: mac-universal
+            artifact_glob: release/*.dmg
+
+          - os: windows-latest
+            build_args: --win nsis --x64
+            artifact_name: windows-x64
+            artifact_glob: release/*.exe
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          npm version --no-git-tag-version "$VERSION"
+
+      - name: Generate app icon
+        run: node scripts/gen-icon.cjs
+
+      - name: Build Vite app
+        run: npm run build
+
+      - name: Package desktop app
+        run: npx electron-builder ${{ matrix.build_args }} --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Suppress signing errors — we do ad-hoc signing ourselves below
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      # Ad-hoc sign the macOS .app so macOS TCC can track Bluetooth permission.
+      # Without a code signature the Bluetooth dialog never appears when the app
+      # is launched from Finder/Dock (terminal launch still works, but users
+      # shouldn't need that workaround).
+      # Note: users will still see "unidentified developer" on first open and
+      # must right-click → Open to bypass Gatekeeper. For fully transparent
+      # distribution, add an Apple Developer certificate to repo secrets.
+      - name: Ad-hoc sign macOS app and repackage DMG
+        if: matrix.artifact_name == 'mac-universal'
+        run: |
+          APP="release/mac-universal/FlightTrace.app"
+          codesign --force --deep --sign - "$APP"
+          # Recreate the DMG so it contains the signed app
+          VERSION=$(node -p "require('./package.json').version")
+          DMG="release/FlightTrace-${VERSION}-universal.dmg"
+          rm -f release/*.dmg
+          hdiutil create \
+            -volname "FlightTrace" \
+            -srcfolder "$APP" \
+            -ov -format UDZO \
+            "$DMG"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: flighttrace-${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_glob }}
+          retention-days: 30
+
+      - name: Attach to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3.0.0
+        with:
+          files: ${{ matrix.artifact_glob }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

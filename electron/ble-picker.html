@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select Bluetooth Device</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: #0b0f14;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-app-region: no-drag;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid #1e2836;
+      flex-shrink: 0;
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .header-title svg { flex-shrink: 0; }
+    .header-title h2 { font-size: 14px; font-weight: 600; color: #e2e8f0; }
+    .header-sub { font-size: 11px; color: #475569; padding-left: 26px; }
+
+    /* ── Device list ── */
+    .list-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .list-wrap::-webkit-scrollbar { width: 4px; }
+    .list-wrap::-webkit-scrollbar-track { background: transparent; }
+    .list-wrap::-webkit-scrollbar-thumb { background: #1e2836; border-radius: 2px; }
+
+    .empty {
+      padding: 32px 16px;
+      text-align: center;
+      color: #475569;
+    }
+    .empty svg { display: block; margin: 0 auto 12px; opacity: 0.4; }
+    .empty p { font-size: 12px; line-height: 1.6; }
+
+    .device {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      background: #0f1923;
+      border: 1px solid #1a2535;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.12s;
+    }
+    .device:last-child { margin-bottom: 0; }
+    .device:hover { background: #162030; border-color: #2563eb; }
+    .device:active { background: #1a2a3f; }
+
+    .device-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: #1a2535;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .device-info { flex: 1; min-width: 0; }
+    .device-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .device-id {
+      font-size: 10px;
+      color: #475569;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      margin-top: 1px;
+    }
+
+    .device-arrow {
+      color: #334155;
+      flex-shrink: 0;
+    }
+    .device:hover .device-arrow { color: #2563eb; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 16px 8px;
+      font-size: 11px;
+      color: #475569;
+      flex-shrink: 0;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .dot.idle { background: #475569; animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Scan progress bar ── */
+    .scan-bar-wrap {
+      height: 2px;
+      background: rgba(255,255,255,0.05);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .scan-bar {
+      height: 100%;
+      background: #2563eb;
+      transition: width 1s linear;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      border-top: 1px solid #1e2836;
+      flex-shrink: 0;
+    }
+    button {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #1e2836;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.1s;
+    }
+    .btn-cancel  { background: #0f1923; color: #94a3b8; }
+    .btn-cancel:hover { background: #162030; }
+    .btn-stop    { background: #0f1923; color: #f87171; border-color: #7f1d1d; }
+    .btn-stop:hover { background: #1c1212; }
+    .btn-rescan  { background: #0f1923; color: #60a5fa; border-color: #1d4ed8; }
+    .btn-rescan:hover { background: #162030; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6.5 6.5l11 11M6.5 17.5l11-11M12 3v2m0 14v2m-9-9h2m14 0h2"/>
+      </svg>
+      <h2>Select Bluetooth Device</h2>
+    </div>
+    <div class="header-sub" id="subtitle">Scanning for devices…</div>
+  </div>
+
+  <!-- Device list -->
+  <div class="list-wrap" id="list-wrap">
+    <div class="empty" id="empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M6.5 6.5l11 11M6.5 17.5l11-11M12 3v2m0 14v2m-9-9h2m14 0h2"/>
+      </svg>
+      <p>Scanning — make sure your device<br>is powered on and in range.</p>
+    </div>
+    <ul id="list" style="list-style:none"></ul>
+  </div>
+
+  <!-- Scanning indicator -->
+  <div class="status-bar">
+    <div class="dot" id="dot"></div>
+    <span id="status-text">Scanning…</span>
+  </div>
+
+  <!-- Scan progress bar (shrinks from 100% → 0% over SCAN_SECS) -->
+  <div class="scan-bar-wrap"><div class="scan-bar" id="scan-bar" style="width:100%"></div></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <button class="btn-cancel" id="btn-cancel">Cancel</button>
+    <button class="btn-stop"   id="btn-action">Stop · <span id="countdown">10</span>s</button>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const listEl      = document.getElementById('list');
+    const emptyEl     = document.getElementById('empty');
+    const subtitleEl  = document.getElementById('subtitle');
+    const dotEl       = document.getElementById('dot');
+    const statusEl    = document.getElementById('status-text');
+    const scanBarEl   = document.getElementById('scan-bar');
+    const actionBtn   = document.getElementById('btn-action');
+    const countdownEl = document.getElementById('countdown');
+
+    const SCAN_SECS = 10;
+    let _scanning    = true;
+    let _remaining   = SCAN_SECS;
+    let _timer       = null;
+
+    // ── Known drone / RC radio BLE module name patterns ────────────────────────
+    const DRONE_PATTERNS = [
+      /elrs/i, /expresslrs/i,
+      /speedybee/i,
+      /dronebridge/i,
+      /hm[\s-]?10/i, /hmsoft/i, /hmsensor/i,
+      /bt[\s-]?11/i,
+      /nrf\d*/i,
+      /betaflight/i, /\bbf\b/i,
+      /inav/i,
+      /mavlink/i, /\bmav\b/i,
+      /radiomaster/i,
+      /crossfire/i, /\bcrsf\b/i, /\btbs\b/i,
+      /frsky/i,
+      /hdzero/i,
+      /rn487/i, /rn4870/i,
+      /fc[\s_-]/i,
+      /\buart\b/i,
+      /\besp32\b/i,
+    ];
+    const isDrone = name => DRONE_PATTERNS.some(p => p.test(name));
+
+    // ── Countdown timer ────────────────────────────────────────────────────────
+    function startCountdown() {
+      _scanning   = true;
+      _remaining  = SCAN_SECS;
+      scanBarEl.style.transition = 'none';
+      scanBarEl.style.width = '100%';
+      // force reflow so transition applies from 100%
+      scanBarEl.getBoundingClientRect();
+      scanBarEl.style.transition = `width ${SCAN_SECS}s linear`;
+      scanBarEl.style.width = '0%';
+
+      clearInterval(_timer);
+      _timer = setInterval(() => {
+        _remaining--;
+        countdownEl.textContent = _remaining;
+        if (_remaining <= 0) stopScan();
+      }, 1000);
+
+      actionBtn.className = 'btn-stop';
+      actionBtn.innerHTML = 'Stop · <span id="countdown">' + SCAN_SECS + 's</span>';
+      // re-grab since we replaced innerHTML
+      Object.defineProperty(window, '_cdEl', { get: () => actionBtn.querySelector('span'), configurable: true });
+      dotEl.classList.remove('idle');
+      statusEl.textContent = 'Scanning…';
+    }
+
+    function stopScan() {
+      clearInterval(_timer);
+      _scanning = false;
+      ipcRenderer.send('ble-stop-scan');
+      scanBarEl.style.transition = 'none';
+      scanBarEl.style.width = '0%';
+      actionBtn.className = 'btn-rescan';
+      actionBtn.textContent = 'Scan again';
+      dotEl.classList.add('idle');
+      const n = _seen.size;
+      statusEl.textContent = n ? `${n} device${n !== 1 ? 's' : ''} found` : 'No devices found';
+    }
+
+    // ── Device accumulator — key by deviceId so partial updates (macOS sends ──
+    // ── one device at a time) merge correctly rather than replacing the list ──
+    const _seen = new Map();
+
+    actionBtn.addEventListener('click', () => {
+      if (_scanning) {
+        stopScan();
+      } else {
+        _seen.clear();
+        ipcRenderer.send('ble-restart-scan');
+        startCountdown();
+        subtitleEl.textContent = 'Scanning for devices…';
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        subtitleEl.dataset.count = '0';
+      }
+    });
+
+    // ── Render device list ─────────────────────────────────────────────────────
+    function render(devices) {
+      listEl.innerHTML = '';
+
+      // Show ALL devices — macOS often sends devices before their name arrives,
+      // so filtering by name here would hide them entirely. Use ID as fallback.
+      const all = [..._seen.values()];
+      subtitleEl.dataset.count = all.length;
+
+      if (all.length === 0) {
+        emptyEl.style.display = 'block';
+        subtitleEl.textContent = 'Scanning for devices…';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+
+      const known   = all.filter(d => isDrone(d.deviceName || ''));
+      const unknown = all.filter(d => !isDrone(d.deviceName || ''));
+
+      subtitleEl.textContent = known.length
+        ? `${known.length} drone device${known.length !== 1 ? 's' : ''}${unknown.length ? ` · ${unknown.length} other` : ''}`
+        : `${all.length} device${all.length !== 1 ? 's' : ''} found`;
+
+      if (_scanning) {
+        dotEl.classList.remove('idle');
+        statusEl.textContent = 'Scanning…';
+      }
+
+      function addItem(d, recognized) {
+        const name = (d.deviceName && d.deviceName.trim()) ? d.deviceName : null;
+        const id   = d.deviceId || '';
+        const li   = document.createElement('li');
+        li.className = 'device';
+        li.innerHTML = `
+          <div class="device-icon" style="${recognized ? '' : 'opacity:0.4'}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${recognized ? '#60a5fa' : '#64748b'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6.5 6.5l11 11M6.5 17.5l11-11M12 3v2m0 14v2m-9-9h2m14 0h2"/>
+            </svg>
+          </div>
+          <div class="device-info">
+            <div class="device-name" style="${recognized ? '' : 'color:#64748b'}">${name || '<span style="font-style:italic;color:#475569">No name</span>'}</div>
+            <div class="device-id">${id}</div>
+          </div>
+          ${recognized
+            ? `<svg class="device-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
+            : `<span style="font-size:10px;color:#475569;flex-shrink:0">?</span>`}
+        `;
+        li.addEventListener('click', () => ipcRenderer.send('ble-select', id));
+        listEl.appendChild(li);
+      }
+
+      known.forEach(d => addItem(d, true));
+      if (unknown.length) {
+        const sep = document.createElement('li');
+        sep.style.cssText = 'padding:6px 12px 4px;font-size:10px;color:#334155;text-transform:uppercase;letter-spacing:.08em;list-style:none';
+        sep.textContent = 'Other nearby devices';
+        listEl.appendChild(sep);
+        unknown.forEach(d => addItem(d, false));
+      }
+    }
+
+    ipcRenderer.on('ble-devices', (_, devices) => {
+      // Merge into accumulator — handles macOS (fires per-device) and
+      // Windows (fires with full list) uniformly
+      (devices || []).forEach(d => { if (d.deviceId) _seen.set(d.deviceId, d); });
+      render();
+    });
+
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+      clearInterval(_timer);
+      ipcRenderer.send('ble-select', '');
+    });
+
+    // Start countdown immediately on load
+    startCountdown();
+  </script>
+</body>
+</html>

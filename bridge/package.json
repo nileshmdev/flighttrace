@@ -1,0 +1,13 @@
+{
+  "name": "telemetry-udp-bridge",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "udp-bridge.js",
+  "scripts": {
+    "start": "node udp-bridge.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

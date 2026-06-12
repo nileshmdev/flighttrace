@@ -18,7 +18,7 @@ Grab the latest build from the [Releases page](../../releases):
 | macOS | `FlightTrace-*.dmg` |
 | Windows | `FlightTrace-*.exe` |
 
-Or open the [web app](https://nileshmdev.github.io/flighttrace/#/) in Chrome / Edge.
+Or open the [web app](https://nileshmdev.github.io/FlightTrace/#/) in Chrome / Edge.
 
 ---
 

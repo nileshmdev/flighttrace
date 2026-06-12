@@ -7,6 +7,9 @@ import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const isGitHubPages = process.env.GITHUB_PAGES === "true";
+// Pages serves the site at /<repo-name>/ — case-sensitive. Derive it from CI
+// so a repo rename can't silently break asset paths again.
+const pagesBase = `/${(process.env.GITHUB_REPOSITORY ?? "x/FlightTrace").split("/")[1]}/`;
 
 // Use the nearest git tag as the version. Falls back to package.json so dev
 // builds without a tag still show something sensible.
@@ -24,9 +27,9 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
   },
-  // GitHub Pages needs an absolute base (/flighttrace/) for correct PWA scope.
+  // GitHub Pages needs an absolute base (/<repo>/) for correct PWA scope.
   // Electron needs "./" because it loads via file://.
-  base: isGitHubPages ? "/flighttrace/" : "./",
+  base: isGitHubPages ? pagesBase : "./",
   plugins: [
     vue(),
     basicSsl(),
@@ -43,8 +46,8 @@ export default defineConfig({
         background_color: "#050709",
         display: "standalone",
         orientation: "any",
-        start_url: isGitHubPages ? "/flighttrace/" : ".",
-        scope: isGitHubPages ? "/flighttrace/" : ".",
+        start_url: isGitHubPages ? pagesBase : ".",
+        scope: isGitHubPages ? pagesBase : ".",
         icons: [
           { src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
           { src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },

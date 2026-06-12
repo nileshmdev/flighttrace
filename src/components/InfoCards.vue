@@ -45,10 +45,15 @@ function gpsState() {
   return "ok";
 }
 
-const gpsColor = computed(() => {
-  const s = gpsState();
-  return s === "mute" ? "text-hud-mute" : `text-hud-${s}`;
-});
+// Neutral when nominal — color only signals degraded/alarm states.
+const STATE_TEXT = {
+  mute: "text-label",
+  ok: "text-data",
+  warn: "text-status-caution",
+  danger: "text-status-critical",
+};
+
+const gpsColor = computed(() => STATE_TEXT[gpsState()]);
 
 const gpsBg = computed(() => `bar-${gpsState()}`);
 
@@ -118,19 +123,27 @@ function stateForLq(lq) {
 
 const lqFmt = computed(() => telemetry.uplinkLq == null ? "—" : Math.round(telemetry.uplinkLq));
 
-const lqMainColor = computed(() => {
-  const s = stateForLq(telemetry.uplinkLq);
-  return s === "mute" ? "text-hud-mute" : `text-hud-${s}`;
-});
+const lqMainColor = computed(() => STATE_TEXT[stateForLq(telemetry.uplinkLq)]);
 
 const lqBg = computed(() => `bar-${stateForLq(telemetry.uplinkLq)}`);
 
+// Honest headline: LQ and RSSI must agree — the worse of the two wins, so the
+// badge can't say STRONG while RSSI is marginal.
 const linkBadge = computed(() => {
   const lq = telemetry.uplinkLq;
   if (lq == null) return null;
-  if (lq >= 80) return { label: "STRONG", cls: "badge-ok" };
-  if (lq >= 50) return { label: "GOOD",   cls: "badge-warn" };
-  return { label: "WEAK", cls: "badge-danger" };
+  let band = lq < settings.alerts.signalLoss ? 0 : lq < 50 ? 1 : lq < 80 ? 2 : 3;
+  const rssi = telemetry.uplinkRssi1;
+  if (rssi != null) {
+    const rssiBand = rssi >= -75 ? 3 : rssi >= -95 ? 2 : 1;
+    band = Math.min(band, rssiBand);
+  }
+  return [
+    { label: "LOST",   cls: "badge-danger" },
+    { label: "WEAK",   cls: "badge-warn" },
+    { label: "FAIR",   cls: "badge-neutral" },
+    { label: "STRONG", cls: "badge-ok" },
+  ][band];
 });
 
 const cellVoltageFmt = computed(() => {
@@ -155,14 +168,11 @@ const percentFmt = computed(() => percentValue.value == null ? "—" : Math.roun
 function stateForPercent(p) {
   if (p == null) return "mute";
   if (p < 20) return "danger";
-  if (p < 50) return "warn";
+  if (p < 35) return "warn";
   return "ok";
 }
 
-const percentColor = computed(() => {
-  const s = stateForPercent(percentValue.value);
-  return s === "mute" ? "text-hud-mute" : `text-hud-${s}`;
-});
+const percentColor = computed(() => STATE_TEXT[stateForPercent(percentValue.value)]);
 
 const percentBg = computed(() => `bar-${stateForPercent(percentValue.value)}`);
 
@@ -219,19 +229,19 @@ const timeRemainingFmt = computed(() => {
       <!-- Big LQ % + RSSI echo -->
       <div class="flex items-end justify-between mt-1">
         <div class="flex items-baseline gap-1">
-          <span class="text-4xl font-bold tabular-nums leading-none" :class="lqMainColor">{{ lqFmt }}</span>
-          <span class="text-xs text-hud-mute">%</span>
+          <span class="text-4xl font-mono font-bold tabular-nums leading-none" :class="lqMainColor">{{ lqFmt }}</span>
+          <span class="text-xs text-unit">%</span>
         </div>
-        <span v-if="telemetry.uplinkRssi1 != null" class="text-[11px] font-mono text-hud-mute text-right">
+        <span v-if="telemetry.uplinkRssi1 != null" class="text-[11px] font-mono tabular-nums text-label text-right">
           {{ telemetry.uplinkRssi1 }} dBm
         </span>
       </div>
       <!-- Signal status bar (LQ 0–100) -->
-      <div class="mt-2 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.05)">
+      <div class="mt-2 h-1.5 rounded-pill overflow-hidden bg-white/5">
         <div :class="lqBg" :style="{ width: (telemetry.uplinkLq ?? 0) + '%' }" />
       </div>
       <!-- 3-col RSSI / SNR / TX PWR -->
-      <div class="mt-3 pt-2 grid grid-cols-3 gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06)">
+      <div class="mt-3 pt-2 grid grid-cols-3 gap-2 border-t border-surface-border">
         <div class="stat-item">
           <span class="stat-label">RSSI</span>
           <div class="stat-row">
@@ -267,29 +277,29 @@ const timeRemainingFmt = computed(() => {
           </svg>
           <span class="card-title">POWER{{ cellCount ? ` · ${cellCount}S` : "" }} {{ settings.pack.chemistry }}</span>
         </div>
-        <span v-if="timeRemainingFmt" class="text-[10px] font-mono text-hud-mute">{{ timeRemainingFmt }}</span>
+        <span v-if="timeRemainingFmt" class="text-[10px] font-mono tabular-nums text-label">{{ timeRemainingFmt }}</span>
       </div>
       <!-- Big percent + capacity fraction -->
       <div class="flex items-end justify-between mt-1">
         <div class="flex items-baseline gap-1">
-          <span class="text-4xl font-bold tabular-nums leading-none" :class="percentColor">{{ percentFmt }}</span>
-          <span class="text-xs text-hud-mute">%</span>
+          <span class="text-4xl font-mono font-bold tabular-nums leading-none" :class="percentColor">{{ percentFmt }}</span>
+          <span class="text-xs text-unit">%</span>
         </div>
-        <span v-if="capacityFmt" class="text-[11px] font-mono text-hud-mute text-right">{{ capacityFmt }}</span>
+        <span v-if="capacityFmt" class="text-[11px] font-mono tabular-nums text-label text-right">{{ capacityFmt }}</span>
       </div>
       <!-- Progress bar -->
-      <div class="mt-2 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.05)">
+      <div class="mt-2 h-1.5 rounded-pill overflow-hidden bg-white/5">
         <div :class="percentBg" :style="{ width: (percentValue ?? 0) + '%' }" />
       </div>
       <!-- 3-col VOLTAGE / CURRENT / PER CELL -->
-      <div class="mt-3 pt-2 grid grid-cols-3 gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06)">
+      <div class="mt-3 pt-2 grid grid-cols-3 gap-2 border-t border-surface-border">
         <div v-if="settings.visibleSensors.voltage" class="stat-item">
           <span class="stat-label">VOLTAGE</span>
           <div class="stat-row">
             <span
               class="stat-num"
-              :class="telemetry.voltage != null && telemetry.voltage <= settings.alerts.criticalVoltage ? 'text-hud-danger'
-                : telemetry.voltage != null && telemetry.voltage <= settings.alerts.lowVoltage ? 'text-hud-warn' : ''"
+              :class="telemetry.voltage != null && telemetry.voltage <= settings.alerts.criticalVoltage ? 'text-status-critical'
+                : telemetry.voltage != null && telemetry.voltage <= settings.alerts.lowVoltage ? 'text-status-caution' : ''"
             >{{ telemetry.voltage != null ? telemetry.voltage.toFixed(1) : "—" }}</span>
             <span class="stat-unit">V</span>
           </div>
@@ -331,26 +341,26 @@ const timeRemainingFmt = computed(() => {
       <!-- Big SATS + HDOP echo -->
       <div class="flex items-end justify-between mt-1">
         <div class="flex items-baseline gap-1">
-          <span class="text-4xl font-bold tabular-nums leading-none" :class="gpsColor">{{ telemetry.satellites ?? "—" }}</span>
-          <span class="text-xs text-hud-mute">sats</span>
+          <span class="text-4xl font-mono font-bold tabular-nums leading-none" :class="gpsColor">{{ telemetry.satellites ?? "—" }}</span>
+          <span class="text-xs text-unit">sats</span>
         </div>
-        <span v-if="telemetry.hdop != null" class="text-[11px] font-mono text-hud-mute text-right">
+        <span v-if="telemetry.hdop != null" class="text-[11px] font-mono tabular-nums text-label text-right">
           HDOP {{ telemetry.hdop.toFixed(1) }}
         </span>
       </div>
       <!-- Satellite-strength bar -->
-      <div class="mt-2 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.05)">
+      <div class="mt-2 h-1.5 rounded-pill overflow-hidden bg-white/5">
         <div :class="gpsBg" :style="{ width: gpsBarPct + '%' }" />
       </div>
       <!-- POSITION line -->
-      <div class="mt-3 pt-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06)">
+      <div class="mt-3 pt-2 border-t border-surface-border">
         <span class="stat-label block mb-0.5">POSITION</span>
         <div class="flex items-baseline gap-1">
-          <span class="text-[11px] font-mono text-hud-text tabular-nums">
+          <span class="text-[11px] font-mono text-data tabular-nums">
             {{ telemetry.lat != null ? telemetry.lat.toFixed(6) : "—" }}
           </span>
-          <span class="text-[11px] font-mono text-hud-mute">/</span>
-          <span class="text-[11px] font-mono text-hud-text tabular-nums">
+          <span class="text-[11px] font-mono text-label">/</span>
+          <span class="text-[11px] font-mono text-data tabular-nums">
             {{ telemetry.lon != null ? telemetry.lon.toFixed(6) : "—" }}
           </span>
         </div>

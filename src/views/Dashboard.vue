@@ -11,6 +11,8 @@ import { useSettingsStore } from "../stores/settings.js";
 import { useReplayStore } from "../stores/replay.js";
 import { alertAudio } from "../utils/AlertAudio.js";
 
+const APP_VERSION = __APP_VERSION__;
+
 const telemetry = useTelemetryStore();
 const conn = useConnectionStore();
 const settings = useSettingsStore();
@@ -105,13 +107,13 @@ onUnmounted(() => {
     <!-- Vignette + edge gradient overlay -->
     <div
       class="absolute inset-0 pointer-events-none z-[1]"
-      style="background: radial-gradient(ellipse at center, transparent 30%, rgba(5,7,9,0.65) 100%), linear-gradient(180deg, rgba(5,7,9,0.55) 0%, transparent 12%, transparent 80%, rgba(5,7,9,0.5) 100%)"
+      style="background: radial-gradient(ellipse at center, transparent 30%, rgb(11 14 17 / 0.65) 100%), linear-gradient(180deg, rgb(11 14 17 / 0.55) 0%, transparent 12%, transparent 80%, rgb(11 14 17 / 0.5) 100%)"
     />
 
-    <!-- Top HUD + Replay bar — floating glass cards with inset margins -->
-    <div class="relative z-10 pointer-events-none px-3 pt-3 flex flex-col gap-2">
+    <!-- Top HUD docked flush to the top edge; replay bar floats below it -->
+    <div class="relative z-10 pointer-events-none flex flex-col gap-2">
       <div class="pointer-events-auto overflow-x-auto"><TopHud /></div>
-      <div class="pointer-events-auto flex justify-center"><ReplayBar /></div>
+      <div class="pointer-events-auto flex justify-center px-3"><ReplayBar /></div>
     </div>
 
     <!-- Spacer -->
@@ -123,15 +125,15 @@ onUnmounted(() => {
       <div v-if="alerts.length" class="flex justify-center flex-wrap gap-2 pb-2 px-3 pointer-events-none select-none">
         <div
           v-for="a in alerts" :key="a"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-[0.15em] backdrop-blur-xl"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-card text-[11px] font-bold uppercase tracking-label backdrop-blur-md"
           :class="a.startsWith('CRITICAL') || a === 'FAILSAFE'
-            ? 'text-hud-danger'
-            : 'text-hud-warn'"
+            ? 'text-status-critical'
+            : 'text-status-caution'"
           :style="a.startsWith('CRITICAL') || a === 'FAILSAFE'
-            ? 'background: rgba(251,113,133,0.18); border: 1px solid rgba(251,113,133,0.45); box-shadow: 0 0 20px -4px rgba(251,113,133,0.4)'
-            : 'background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.4)'"
+            ? 'background: rgb(248 113 113 / 0.18); border: 1px solid rgb(248 113 113 / 0.45)'
+            : 'background: rgb(251 191 36 / 0.15); border: 1px solid rgb(251 191 36 / 0.4)'"
         >
-          <span class="w-1.5 h-1.5 rounded-full mr-0.5" :class="a.startsWith('CRITICAL') || a === 'FAILSAFE' ? 'bg-hud-danger animate-pulse' : 'bg-hud-warn'" />
+          <span class="w-1.5 h-1.5 rounded-full mr-0.5" :class="a.startsWith('CRITICAL') || a === 'FAILSAFE' ? 'bg-status-critical animate-pulse' : 'bg-status-caution'" />
           {{ a }}
         </div>
       </div>
@@ -148,13 +150,22 @@ onUnmounted(() => {
           <InfoCards />
         </div>
       </div>
+
+    </div>
+
+    <!-- Footer credit — absolute overlay inside the bottom row's padding,
+         so it never shifts the panels above it -->
+    <div class="absolute bottom-0.5 inset-x-0 z-10 flex justify-center pointer-events-none select-none">
+      <span class="text-[9px] tracking-label text-label whitespace-nowrap" style="text-shadow: 0 1px 2px rgb(11 14 17 / 0.8)">
+        Designed by Nilesh M · © 2026 · All rights reserved · v{{ APP_VERSION }}
+      </span>
     </div>
 
     <!-- Detection overlay -->
     <div
       v-if="conn.status === 'connected' && conn.detectState === 'scoring'"
-      class="absolute top-20 left-1/2 -translate-x-1/2 z-20 px-4 py-2 text-xs text-hud-warn pointer-events-none rounded-lg backdrop-blur-xl"
-      style="background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25)"
+      class="absolute top-20 left-1/2 -translate-x-1/2 z-20 px-4 py-2 text-xs text-status-caution pointer-events-none rounded-card backdrop-blur-md"
+      style="background: rgb(251 191 36 / 0.08); border: 1px solid rgb(251 191 36 / 0.25)"
     >
       Detecting protocol… CRSF {{ conn.detectScores.crsf }} · MAVLink
       {{ conn.detectScores.mavlink }} · LTM {{ conn.detectScores.ltm }}

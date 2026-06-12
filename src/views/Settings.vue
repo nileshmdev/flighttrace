@@ -5,6 +5,8 @@ import { useConnectionStore } from "../stores/connection.js";
 import { KNOWN_SERVICES } from "../transports/BleTransport.js";
 import { alertAudio } from "../utils/AlertAudio.js";
 
+const APP_VERSION = __APP_VERSION__;
+
 const settings = useSettingsStore();
 const conn = useConnectionStore();
 const tab = ref("sensors");
@@ -50,25 +52,22 @@ watch(
   <div class="flex-1 flex flex-col p-5 gap-4 max-w-4xl mx-auto w-full">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-semibold tracking-wide text-hud-text">Settings</h1>
-        <p class="text-[11px] text-hud-mute mt-0.5 tracking-wide">Configure your ground station preferences</p>
+        <h1 class="text-xl font-semibold tracking-wide text-data">Settings</h1>
+        <p class="text-[11px] text-label mt-0.5 tracking-wide">FlightTrace · Telemetry Monitor · v{{ APP_VERSION }}</p>
       </div>
       <router-link to="/" class="btn">← Dashboard</router-link>
     </div>
 
     <div class="panel flex flex-col flex-1 overflow-hidden">
       <!-- Pill tab bar — GCS v3 style -->
-      <div class="flex gap-1 p-1.5 mx-4 mt-4 mb-0 rounded-lg" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07)">
+      <div class="flex gap-1 p-1.5 mx-4 mt-4 mb-0 rounded-card bg-white/[0.03] border border-surface-border">
         <button
           v-for="t in tabs"
           :key="t.id"
-          class="flex-1 h-8 rounded-md text-[11px] font-semibold tracking-[0.1em] uppercase transition-all duration-150 cursor-pointer"
+          class="flex-1 h-8 rounded-btn text-[11px] font-semibold tracking-label uppercase transition-all duration-150 cursor-pointer"
           :class="tab === t.id
-            ? 'text-hud-text'
-            : 'text-hud-mute hover:text-hud-text'"
-          :style="tab === t.id
-            ? 'background: linear-gradient(180deg, rgba(167,139,250,0.22), rgba(167,139,250,0.08)); box-shadow: inset 0 0 0 1px rgba(167,139,250,0.35), 0 0 14px -4px rgba(167,139,250,0.4)'
-            : ''"
+            ? 'text-data bg-brand/15 ring-1 ring-inset ring-brand/35'
+            : 'text-label hover:text-data'"
           @click="tab = t.id"
         >
           {{ t.label }}
@@ -78,7 +77,7 @@ watch(
       <div class="p-5 overflow-auto">
         <!-- SENSORS -->
         <section v-if="tab === 'sensors'" class="space-y-5">
-          <p class="text-sm text-hud-mute">Toggle individual widgets and cards on the dashboard.</p>
+          <p class="text-sm text-label">Toggle individual widgets and cards on the dashboard.</p>
 
           <!-- Top bar cells -->
           <div>
@@ -86,10 +85,10 @@ watch(
             <div class="grid grid-cols-2 gap-2">
               <label
                 v-for="k in ['armTimer','rssi','voltage','percent']" :key="k"
-                class="flex items-center gap-2.5 panel-tight px-3 py-2.5 cursor-pointer select-none hover:border-hud-accent/30 transition-colors"
+                class="flex items-center gap-2.5 panel-tight px-3 py-2.5 cursor-pointer select-none hover:border-brand/30 transition-colors"
               >
-                <input v-model="settings.visibleSensors[k]" type="checkbox" class="accent-hud-accent shrink-0 w-3.5 h-3.5" />
-                <span class="text-sm leading-tight text-hud-text">{{ SENSOR_LABELS[k] }}</span>
+                <input v-model="settings.visibleSensors[k]" type="checkbox" class="accent-brand shrink-0 w-3.5 h-3.5" />
+                <span class="text-sm leading-tight text-data">{{ SENSOR_LABELS[k] }}</span>
               </label>
             </div>
           </div>
@@ -100,10 +99,10 @@ watch(
             <div class="grid grid-cols-2 gap-2">
               <label
                 v-for="k in ['altitude','distance','groundSpeed','verticalSpeed']" :key="k"
-                class="flex items-center gap-2.5 panel-tight px-3 py-2.5 cursor-pointer select-none hover:border-hud-accent/30 transition-colors"
+                class="flex items-center gap-2.5 panel-tight px-3 py-2.5 cursor-pointer select-none hover:border-brand/30 transition-colors"
               >
-                <input v-model="settings.visibleSensors[k]" type="checkbox" class="accent-hud-accent shrink-0 w-3.5 h-3.5" />
-                <span class="text-sm leading-tight text-hud-text">{{ SENSOR_LABELS[k] }}</span>
+                <input v-model="settings.visibleSensors[k]" type="checkbox" class="accent-brand shrink-0 w-3.5 h-3.5" />
+                <span class="text-sm leading-tight text-data">{{ SENSOR_LABELS[k] }}</span>
               </label>
             </div>
           </div>
@@ -116,36 +115,36 @@ watch(
               <!-- LINK card -->
               <div class="panel-tight px-3 py-2.5">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input v-model="settings.visibleSensors.rssi" type="checkbox" class="accent-hud-accent shrink-0" />
+                  <input v-model="settings.visibleSensors.rssi" type="checkbox" class="accent-brand shrink-0" />
                   <span class="text-sm font-medium">LINK Card</span>
-                  <span class="text-xs text-hud-mute ml-1">LQ · RSSI · SNR · TX Power</span>
+                  <span class="text-xs text-label ml-1">LQ · RSSI · SNR · TX Power</span>
                 </label>
               </div>
 
               <!-- POWER card — two sub-toggles -->
               <div class="panel-tight px-3 py-2.5 space-y-1.5">
-                <div class="text-sm font-medium text-hud-text">POWER Card</div>
+                <div class="text-sm font-medium text-data">POWER Card</div>
                 <div class="flex flex-wrap gap-x-4 gap-y-1 pl-1">
                   <label class="flex items-center gap-1.5 cursor-pointer select-none">
-                    <input v-model="settings.visibleSensors.voltage" type="checkbox" class="accent-hud-accent shrink-0" />
-                    <span class="text-sm text-hud-mute">Voltage / % / Per-cell</span>
+                    <input v-model="settings.visibleSensors.voltage" type="checkbox" class="accent-brand shrink-0" />
+                    <span class="text-sm text-label">Voltage / % / Per-cell</span>
                   </label>
                   <label class="flex items-center gap-1.5 cursor-pointer select-none">
-                    <input v-model="settings.visibleSensors.current" type="checkbox" class="accent-hud-accent shrink-0" />
-                    <span class="text-sm text-hud-mute">Current draw</span>
+                    <input v-model="settings.visibleSensors.current" type="checkbox" class="accent-brand shrink-0" />
+                    <span class="text-sm text-label">Current draw</span>
                   </label>
                 </div>
                 <p v-if="!settings.visibleSensors.voltage && !settings.visibleSensors.current"
-                   class="text-[11px] text-hud-warn pl-1">Both off — card will be hidden.</p>
+                   class="text-[11px] text-status-caution pl-1">Both off — card will be hidden.</p>
               </div>
 
 
               <!-- GPS card -->
               <div class="panel-tight px-3 py-2.5">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input v-model="settings.visibleSensors.satellites" type="checkbox" class="accent-hud-accent shrink-0" />
+                  <input v-model="settings.visibleSensors.satellites" type="checkbox" class="accent-brand shrink-0" />
                   <span class="text-sm font-medium">GPS Card</span>
-                  <span class="text-xs text-hud-mute ml-1">Satellites · HDOP · Position</span>
+                  <span class="text-xs text-label ml-1">Satellites · HDOP · Position</span>
                 </label>
               </div>
 
@@ -227,7 +226,7 @@ watch(
                 />
               </label>
             </div>
-            <p class="text-xs text-hud-mute mt-2">
+            <p class="text-xs text-label mt-2">
               "Show all devices" scans for any device advertising a known drone
               BLE service (NUS, HM-10, SpeedyBee, etc.). If your module uses a
               custom UUID not in that list, use "Filter by service UUID" instead
@@ -241,7 +240,7 @@ watch(
               <span>port</span>
               <input v-model.number="settings.udp.listenPort" type="number" class="settings-input w-24" />
             </div>
-            <p class="text-xs text-hud-mute mt-1">
+            <p class="text-xs text-label mt-1">
               Browsers cannot open raw UDP — run a small Node bridge that forwards UDP &lt;-&gt; WebSocket.
             </p>
           </div>
@@ -250,11 +249,11 @@ watch(
         <!-- UNITS -->
         <section v-if="tab === 'units'" class="space-y-3">
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="settings.units" type="radio" value="metric" class="accent-hud-accent" />
+            <input v-model="settings.units" type="radio" value="metric" class="accent-brand" />
             Metric (m, km/h, °C)
           </label>
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="settings.units" type="radio" value="imperial" class="accent-hud-accent" />
+            <input v-model="settings.units" type="radio" value="imperial" class="accent-brand" />
             Imperial (ft, mph, °F)
           </label>
         </section>
@@ -267,7 +266,7 @@ watch(
               <option value="osm">OpenStreetMap</option>
               <option value="satellite">Satellite (Esri)</option>
             </select>
-            <span class="text-xs text-hud-mute ml-2">(reload page to apply)</span>
+            <span class="text-xs text-label ml-2">(reload page to apply)</span>
           </label>
           <label class="flex items-center gap-2 text-sm">
             Drone icon
@@ -277,17 +276,17 @@ watch(
             </select>
           </label>
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="settings.map.showTrail" type="checkbox" class="accent-hud-accent" />
+            <input v-model="settings.map.showTrail" type="checkbox" class="accent-brand" />
             Show flight trail
           </label>
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="settings.map.centerOnDrone" type="checkbox" class="accent-hud-accent" />
+            <input v-model="settings.map.centerOnDrone" type="checkbox" class="accent-brand" />
             Auto-center on drone
           </label>
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="settings.map.autoSetHome" type="checkbox" class="accent-hud-accent" />
+            <input v-model="settings.map.autoSetHome" type="checkbox" class="accent-brand" />
             Auto set home on arm
-            <span class="text-xs text-hud-mute">(re-sets every arm; manual override always available)</span>
+            <span class="text-xs text-label">(re-sets every arm; manual override always available)</span>
           </label>
         </section>
 
@@ -295,9 +294,9 @@ watch(
         <section v-if="tab === 'alerts'" class="space-y-3">
           <div class="stat-label mb-1">Audio</div>
           <label class="flex items-center gap-2 text-sm">
-            <input v-model="settings.alerts.audioEnabled" type="checkbox" class="accent-hud-accent" />
+            <input v-model="settings.alerts.audioEnabled" type="checkbox" class="accent-brand" />
             Enable alert sounds
-            <span class="text-xs text-hud-mute">(synthesized beeps — no files required)</span>
+            <span class="text-xs text-label">(synthesized beeps — no files required)</span>
           </label>
           <div v-if="settings.alerts.audioEnabled" class="flex flex-wrap gap-2 mt-1">
             <button class="btn text-xs" @click="alertAudio.arm()">▶ Armed</button>
@@ -329,7 +328,7 @@ watch(
               min="1" max="12" placeholder="auto" class="settings-input w-24"
               @input="e => { const n = parseInt(e.target.value); settings.pack.cellsOverride = isNaN(n) || n < 1 ? null : Math.min(12, n); }"
             />
-            <span class="text-xs text-hud-mute">cells (blank = auto-detect from first voltage)</span>
+            <span class="text-xs text-label">cells (blank = auto-detect from first voltage)</span>
           </label>
           <label class="flex items-center gap-2 text-sm">
             Total capacity (mAh)
@@ -339,7 +338,7 @@ watch(
               min="0" step="100" placeholder="unknown" class="settings-input w-24"
               @input="e => { const n = parseInt(e.target.value); settings.pack.totalCapacity = isNaN(n) || n <= 0 ? null : n; }"
             />
-            <span class="text-xs text-hud-mute">enables % fraction + time-remaining estimate</span>
+            <span class="text-xs text-label">enables % fraction + time-remaining estimate</span>
           </label>
           <label class="flex items-center gap-2 text-sm">
             Chemistry
@@ -357,7 +356,7 @@ watch(
               type="number" min="1" max="5" step="0.05"
               class="settings-input w-24"
             />
-            <span class="text-xs text-hud-mute">full-charge V/cell — used for cell-count detection (default 4.2)</span>
+            <span class="text-xs text-label">full-charge V/cell — used for cell-count detection (default 4.2)</span>
           </label>
         </section>
 
@@ -365,30 +364,33 @@ watch(
         <section v-if="tab === 'protocol'" class="space-y-3">
           <div class="panel-tight p-4">
             <div class="stat-label mb-2">Detection state</div>
-            <div class="text-sm font-mono text-hud-text">{{ conn.detectState }}</div>
-            <div class="text-sm font-mono text-hud-text">protocol: {{ conn.protocol ?? "—" }}</div>
+            <div class="text-sm font-mono text-data">{{ conn.detectState }}</div>
+            <div class="text-sm font-mono text-data">protocol: {{ conn.protocol ?? "—" }}</div>
           </div>
           <div class="panel-tight p-4">
             <div class="stat-label mb-3">Frame validation scores</div>
             <div v-for="(v, k) in conn.detectScores" :key="k" class="flex items-center gap-2 mt-2">
-              <span class="w-16 text-xs uppercase text-hud-mute font-mono">{{ k }}</span>
+              <span class="w-16 text-xs uppercase text-label font-mono">{{ k }}</span>
               <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.05)">
                 <div
                   class="bar-accent"
                   :style="{ width: Math.min(100, v * 25) + '%' }"
                 />
               </div>
-              <span class="text-xs font-mono w-6 text-right text-hud-mute tabular-nums">{{ v }}</span>
+              <span class="text-xs font-mono w-6 text-right text-label tabular-nums">{{ v }}</span>
             </div>
           </div>
-          <div class="panel-tight p-4 text-xs text-hud-mute">
-            Bytes received: <span class="text-hud-text font-mono">{{ conn.bytesIn }}</span>
-            · Frames decoded: <span class="text-hud-text font-mono">{{ conn.framesIn }}</span>
+          <div class="panel-tight p-4 text-xs text-label">
+            Bytes received: <span class="text-data font-mono">{{ conn.bytesIn }}</span>
+            · Frames decoded: <span class="text-data font-mono">{{ conn.framesIn }}</span>
           </div>
         </section>
 
-        <div class="mt-8 pt-4 flex justify-end" style="border-top: 1px solid rgba(255,255,255,0.06)">
-          <button class="btn text-hud-danger hover:!border-hud-danger/40" @click="settings.resetDefaults()">Reset to defaults</button>
+        <div class="mt-8 pt-4 flex items-center justify-between border-t border-surface-border">
+          <span class="text-[10px] text-label select-none">
+            Designed by Nilesh M · © 2026 · All rights reserved · v{{ APP_VERSION }}
+          </span>
+          <button class="btn !text-status-critical hover:!border-status-critical/40" @click="settings.resetDefaults()">Reset to defaults</button>
         </div>
       </div>
     </div>

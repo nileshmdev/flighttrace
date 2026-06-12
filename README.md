@@ -61,7 +61,7 @@ FlightTrace can replay any telemetry log you've previously recorded — no live 
 
 1. **Record** — while connected, click the **Download log (CSV)** button in the top bar to save a `.csv` file of the current session.
 2. **Replay** — click the **Replay** button (counter-clockwise arrow) in the top bar and pick a `.csv` file.
-3. A **replay bar** appears at the bottom of the HUD with the full transport controls:
+3. A **replay bar** appears below the top bar with the full transport controls:
    - **Play / Pause** — start or pause playback.
    - **Stop** — exit replay and return to live mode.
    - **Scrubber** — drag to jump to any point in the recording; the map trail and all telemetry fields update instantly.
@@ -101,3 +101,5 @@ Full setup guides, troubleshooting, and platform-specific notes are in the [Wiki
 MIT — see [LICENSE](LICENSE).
 
 FlightTrace is independent and not affiliated with TBS, ExpressLRS, ArduPilot, PX4, iNav, Betaflight, SpeedyBee, or any flight controller or radio vendor mentioned. Trademarks belong to their respective owners.
+
+Designed by Nilesh M · © 2026

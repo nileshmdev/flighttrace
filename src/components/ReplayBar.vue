@@ -32,16 +32,9 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4, 10];
 <template>
   <div
     v-if="replay.status !== 'idle'"
-    class="panel flex items-center gap-2 px-3 select-none"
-    style="height: 38px; border-radius: 0.625rem; overflow: hidden"
+    class="panel flex items-center gap-2 px-3 select-none overflow-hidden"
+    style="height: 38px"
   >
-    <!-- REPLAY label -->
-    <span class="text-[9.5px] tracking-[0.22em] uppercase font-semibold shrink-0" style="color: #a78bfa">
-      REPLAY
-    </span>
-
-    <div class="w-px self-stretch" style="background: rgba(255,255,255,0.07)" />
-
     <!-- Play / Pause -->
     <button
       class="map-btn w-7 h-7 shrink-0"
@@ -68,14 +61,14 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4, 10];
 
     <!-- Time + Scrubber + Total -->
     <div class="flex items-center gap-2 min-w-[200px] max-w-[400px] flex-1">
-      <span class="text-[11px] font-mono shrink-0" style="color: #4f5b6e; min-width: 36px; text-align:right">
+      <span class="text-[11px] font-mono tabular-nums text-label shrink-0" style="min-width: 36px; text-align:right">
         {{ replay.currentTimeStr }}
       </span>
 
       <!-- Track -->
       <div class="flex-1 relative" style="height: 18px; display:flex; align-items:center">
         <!-- Fill bar -->
-        <div class="absolute inset-x-0 h-1.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.08)">
+        <div class="absolute inset-x-0 h-1.5 rounded-pill overflow-hidden bg-white/10">
           <div
             class="h-full rounded-full"
             :class="replay.status === 'done' ? 'bar-ok' : 'bar-accent'"
@@ -85,7 +78,7 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4, 10];
         <!-- Thumb dot -->
         <div
           class="absolute h-3 w-3 rounded-full border-2 pointer-events-none"
-          style="background: #a78bfa; border-color: rgba(5,7,9,0.8); margin-left: -6px; transition: none"
+          style="background: var(--c-brand); border-color: rgb(11 14 17 / 0.8); margin-left: -6px; transition: none"
           :style="{ left: (displayProgress * 100).toFixed(2) + '%' }"
         />
         <!-- Invisible range input on top -->
@@ -100,7 +93,7 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4, 10];
         />
       </div>
 
-      <span class="text-[11px] font-mono shrink-0" style="color: #4f5b6e; min-width: 36px">
+      <span class="text-[11px] font-mono tabular-nums text-label shrink-0" style="min-width: 36px">
         {{ replay.totalTimeStr }}
       </span>
     </div>
@@ -115,17 +108,16 @@ const SPEEDS = [0.25, 0.5, 1, 2, 4, 10];
       >
         <option v-for="s in SPEEDS" :key="s" :value="s">{{ s }}×</option>
       </select>
-      <svg class="w-2.5 h-2.5 shrink-0 pointer-events-none" style="color:#4f5b6e" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="w-2.5 h-2.5 shrink-0 pointer-events-none text-label" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 9l6 6 6-6"/>
       </svg>
     </div>
 
-    <div class="w-px self-stretch" style="background: rgba(255,255,255,0.07)" />
+    <div class="w-px self-stretch bg-surface-border" />
 
     <!-- Filename -->
     <span
-      class="text-[10px] font-mono truncate shrink-0 max-w-[160px]"
-      style="color: #4f5b6e"
+      class="text-[10px] font-mono truncate shrink-0 max-w-[160px] text-label"
       :title="replay.filename"
     >
       {{ replay.filename }}

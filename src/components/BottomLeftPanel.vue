@@ -21,13 +21,11 @@ const altitudeFmt = computed(() => fmtAltitude(telemetry.relAltitude ?? telemetr
 const speedFmt    = computed(() => fmtSpeed(telemetry.groundSpeed, settings.units, 1));
 const vspeedFmt   = computed(() => fmtSpeed(telemetry.verticalSpeed, settings.units, 1));
 
-const vspeedColor = computed(() => {
-  const v = telemetry.verticalSpeed;
-  if (v == null) return "text-hud-mute";
-  if (v >  0.3) return "text-hud-ok";
-  if (v < -0.3) return "text-hud-danger";
-  return "text-hud-mute";
-});
+// Climb/descend is normal flight, not a status — the value stays neutral and
+// the arrow icon alone shows direction. Red is reserved for true alarms.
+const vspeedColor = computed(() =>
+  telemetry.verticalSpeed == null ? "text-label" : "text-data"
+);
 
 const isClimbing  = computed(() => (telemetry.verticalSpeed ?? 0) >  0.3);
 const isDescending = computed(() => (telemetry.verticalSpeed ?? 0) < -0.3);
@@ -38,7 +36,7 @@ const sensors = computed(() => settings.visibleSensors);
 <template>
   <div class="flex items-end gap-3 select-none">
     <AttitudeIndicator />
-    <div class="card flex items-stretch divide-x divide-white/[0.07] !py-0 !px-0 overflow-hidden">
+    <div class="card flex items-stretch !py-0 !px-0 overflow-hidden">
       <!-- DIST -->
       <div
         v-if="sensors.distance"
@@ -46,7 +44,7 @@ const sensors = computed(() => settings.visibleSensors);
         :class="{ 'disabled-field': !telemetry.homeLat }"
       >
         <div class="flex items-center gap-1 mb-1">
-          <svg class="w-3 h-3 text-hud-mute shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3 h-3 text-label shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="9" width="20" height="6" rx="1.5"/>
             <line x1="6"  y1="9" x2="6"  y2="15"/>
             <line x1="10" y1="9" x2="10" y2="12"/>
@@ -65,7 +63,7 @@ const sensors = computed(() => settings.visibleSensors);
         :class="{ 'disabled-field': !supports('altitude') }"
       >
         <div class="flex items-center gap-1 mb-1">
-          <svg class="w-3 h-3 text-hud-mute shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3 h-3 text-label shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 19V6"/><polyline points="7 11 12 6 17 11"/>
             <line x1="4" y1="20" x2="20" y2="20"/>
           </svg>
@@ -81,7 +79,7 @@ const sensors = computed(() => settings.visibleSensors);
         :class="{ 'disabled-field': !supports('groundSpeed') }"
       >
         <div class="flex items-center gap-1 mb-1">
-          <svg class="w-3 h-3 text-hud-mute shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3 h-3 text-label shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3.34 17a10 10 0 1 1 17.32 0"/>
             <path d="M12 12l3-5" stroke-linecap="round"/>
             <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
@@ -98,7 +96,7 @@ const sensors = computed(() => settings.visibleSensors);
         :class="{ 'disabled-field': !supports('verticalSpeed') }"
       >
         <div class="flex items-center gap-1 mb-1">
-          <svg class="w-3 h-3 shrink-0" :class="vspeedColor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3 h-3 shrink-0 text-label" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <!-- climbing: up arrow -->
             <path v-if="isClimbing"   d="M12 19V5m0 0l-5 5m5-5l5 5"/>
             <!-- descending: down arrow -->

@@ -5,28 +5,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        hud: {
-          bg: "#050709",
-          panel: "#111826",
-          panel2: "#0c1320",
-          border: "#1a2637",
-          accent: "#a78bfa",   // violet primary
-          accent2: "#22d3ee",  // cyan secondary
-          warn: "#fbbf24",
-          danger: "#fb7185",
-          ok: "#34d399",
-          mute: "#4f5b6e",
-          text: "#eaf1fb",
+        // ── Design tokens ── color encodes STATUS, not identity ──
+        surface: {
+          bg: "#0B0E11", // app background
+          card: "#16191F", // panels & cards
+          raised: "#1D222B", // hover rows / nested containers
+          border: "#262B33", // the one 1px border color
         },
+        status: {
+          good: "#34D399", // nominal
+          caution: "#FBBF24", // degraded — weak RSSI, battery 20–35%
+          critical: "#F87171", // TRUE alarms only — link loss, batt <20%, GPS lost
+        },
+        brand: "#8B7FE8", // chrome only (scrubber, active nav, selection) — never on telemetry values
+        data: "#E8EAED", // neutral telemetry text
+        label: "rgb(232 234 237 / 0.55)", // uppercase labels
+        unit: "rgb(232 234 237 / 0.60)", // trailing units
       },
       fontFamily: {
         mono: ["JetBrains Mono", "ui-monospace", "Menlo", "monospace"],
-        sans: ["Geist", "Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+      },
+      // Exactly three radii: cards, buttons/inputs/chips, pills/badges.
+      borderRadius: {
+        card: "0.625rem",
+        btn: "0.5rem",
+        pill: "9999px",
+      },
+      letterSpacing: {
+        label: "0.08em",
       },
       boxShadow: {
-        glow: "0 0 18px rgba(167,139,250,0.35)",
-        "glow-ok": "0 0 12px rgba(52,211,153,0.4)",
-        glass: "0 30px 80px -30px rgba(0,0,0,0.7), 0 1px 0 0 rgba(255,255,255,0.06) inset, 0 -1px 0 0 rgba(0,0,0,0.3) inset",
+        // Soft elevation only — 1px borders carry edge definition over the map.
+        overlay: "0 8px 24px rgba(0,0,0,0.45)",
+        glow: "0 0 8px rgba(52,211,153,0.5)", // status dot halo (good)
       },
     },
   },

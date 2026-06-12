@@ -31,7 +31,6 @@ const ladderLines = computed(() => {
 <template>
   <div
     class="panel relative w-[200px] h-[200px] overflow-hidden rounded-full select-none"
-    style="box-shadow: 0 0 24px rgba(0,210,255,0.18)"
   >
     <!-- Sky/Ground horizon — rotated by roll, translated by pitch -->
     <div
@@ -41,8 +40,8 @@ const ladderLines = computed(() => {
         transformOrigin: 'center center',
       }"
     >
-      <div class="absolute left-[-50%] right-[-50%] top-[-100%] h-[150%] bg-gradient-to-b from-[#0e3a5f] to-[#1d6fa5]" />
-      <div class="absolute left-[-50%] right-[-50%] top-[50%] h-[150%] bg-gradient-to-b from-[#7a4a1f] to-[#3a2410]" />
+      <div class="absolute left-[-50%] right-[-50%] top-[-100%] h-[150%] bg-gradient-to-b from-[#243949] to-[#33536b]" />
+      <div class="absolute left-[-50%] right-[-50%] top-[50%] h-[150%] bg-gradient-to-b from-[#4a3b2a] to-[#241c12]" />
       <div class="absolute left-[-50%] right-[-50%] top-1/2 h-px bg-white/80" />
 
       <!-- Pitch ladder -->
@@ -64,12 +63,14 @@ const ladderLines = computed(() => {
       </div>
     </div>
 
-    <!-- Fixed aircraft reticle -->
+    <!-- Fixed aircraft reticle — neutral with dark outline for contrast on both halves -->
     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <svg width="120" height="40" viewBox="-60 -20 120 40">
-        <line x1="-50" y1="0" x2="-15" y2="0" stroke="#fbbf24" stroke-width="3" />
-        <line x1="15" y1="0" x2="50" y2="0" stroke="#fbbf24" stroke-width="3" />
-        <circle cx="0" cy="0" r="3" fill="#fbbf24" />
+        <line x1="-50" y1="0" x2="-15" y2="0" stroke="rgba(0,0,0,0.5)" stroke-width="5" />
+        <line x1="15" y1="0" x2="50" y2="0" stroke="rgba(0,0,0,0.5)" stroke-width="5" />
+        <line x1="-50" y1="0" x2="-15" y2="0" stroke="#e8eaed" stroke-width="3" />
+        <line x1="15" y1="0" x2="50" y2="0" stroke="#e8eaed" stroke-width="3" />
+        <circle cx="0" cy="0" r="3.5" fill="#e8eaed" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" />
       </svg>
     </div>
 
@@ -77,7 +78,7 @@ const ladderLines = computed(() => {
     <svg class="absolute inset-0 pointer-events-none" viewBox="0 0 200 200">
       <g transform="translate(100,100)">
         <g :transform="`rotate(${roll})`">
-          <polygon points="0,-90 -5,-78 5,-78" fill="#fbbf24" />
+          <polygon points="0,-90 -5,-78 5,-78" fill="#e8eaed" stroke="rgba(0,0,0,0.4)" stroke-width="1" />
         </g>
         <!-- Tick marks -->
         <g v-for="t in [-60, -45, -30, -15, 0, 15, 30, 45, 60]" :key="t" :transform="`rotate(${t})`">
@@ -86,19 +87,20 @@ const ladderLines = computed(() => {
       </g>
     </svg>
 
-    <!-- Heading readout — raised so circle clip doesn't cut text -->
+    <!-- Heading readout — chord strip integrated into the instrument frame -->
     <div
-      class="absolute bottom-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded
-             text-[11px] font-mono bg-black/60 text-hud-accent border border-hud-border whitespace-nowrap"
+      class="absolute bottom-0 inset-x-0 flex items-center justify-center gap-1 pb-1.5 pt-4"
+      style="background: linear-gradient(to top, rgb(11 14 17 / 0.85), transparent)"
     >
-      HDG {{ yaw.toFixed(0).padStart(3, "0") }}°
+      <span class="text-[9px] uppercase tracking-label text-label leading-none">HDG</span>
+      <span class="text-[12px] font-mono tabular-nums text-data leading-none">{{ yaw.toFixed(0).padStart(3, "0") }}°</span>
     </div>
 
     <!-- Pitch / Roll readout -->
-    <div class="absolute top-2 left-2 text-[10px] font-mono text-white/90 bg-black/40 px-1.5 py-0.5 rounded">
+    <div class="absolute top-2 left-2 text-[10px] font-mono tabular-nums text-data bg-black/40 px-1.5 py-0.5 rounded-btn">
       P {{ (telemetry.pitch ?? 0).toFixed(0) }}°
     </div>
-    <div class="absolute top-2 right-2 text-[10px] font-mono text-white/90 bg-black/40 px-1.5 py-0.5 rounded">
+    <div class="absolute top-2 right-2 text-[10px] font-mono tabular-nums text-data bg-black/40 px-1.5 py-0.5 rounded-btn">
       R {{ (telemetry.roll ?? 0).toFixed(0) }}°
     </div>
   </div>

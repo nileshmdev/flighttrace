@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens (mirror of tailwind.config.js for inline/3rd-party CSS) ── */
+:root {
+  --c-bg: #0b0e11;
+  --c-card: #16191f;
+  --c-raised: #1d222b;
+  --c-border: #262b33;
+  --c-data: #e8eaed;
+  --c-label: rgb(232 234 237 / 0.55);
+  --c-unit: rgb(232 234 237 / 0.6);
+  --c-good: #34d399;
+  --c-caution: #fbbf24;
+  --c-critical: #f87171;
+  --c-brand: #8b7fe8;
+}
+
+/* Default UI scale — the layout is sized for ~120% browser zoom, so bake it
+   in on desktop. px and rem values both scale; map pointer coords stay
+   consistent in Chromium (the only engine with Web Serial/BLE anyway).
+   Phones keep 100% — they need every pixel. */
+@media (min-width: 768px) {
+  html {
+    zoom: 1.25;
+  }
+}
+
 html,
 body,
 #app {
@@ -21,91 +46,79 @@ body,
 ::-webkit-scrollbar-track { background: transparent; }
 
 @layer components {
-  /* Glass panel — backdrop card used for TopHud and map overlays */
+  /* Panel — solid surface with a 1px border; strong enough to read over
+     busy satellite imagery (no translucent glass over the map). */
   .panel {
-    @apply backdrop-blur-2xl rounded-xl;
-    background: linear-gradient(135deg, rgba(28,34,48,0.58), rgba(10,14,20,0.48));
-    border: 1px solid rgba(255,255,255,0.07);
-    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.7),
-                0 1px 0 0 rgba(255,255,255,0.06) inset,
-                0 -1px 0 0 rgba(0,0,0,0.3) inset;
+    @apply backdrop-blur-md rounded-card shadow-overlay;
+    background: rgb(22 25 31 / 0.88);
+    border: 1px solid var(--c-border);
   }
 
-  /* Lighter glass for nested rows/tight containers */
+  /* Nested rows / tight containers inside a panel */
   .panel-tight {
-    @apply backdrop-blur-xl rounded-lg;
-    background: rgba(14,20,32,0.6);
-    border: 1px solid rgba(255,255,255,0.06);
+    @apply rounded-btn;
+    background: rgb(29 34 43 / 0.6);
+    border: 1px solid var(--c-border);
   }
 
-  /* Flush top-bar glass (no rounding, full-width border-b) */
+  /* Flush top-bar surface (no rounding, full-width border-b) */
   .panel-bar {
-    background: linear-gradient(135deg, rgba(12,19,32,0.96), rgba(8,12,18,0.94));
-    backdrop-filter: blur(26px) saturate(180%);
-    -webkit-backdrop-filter: blur(26px) saturate(180%);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: rgb(22 25 31 / 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--c-border);
   }
 
-  /* Typography */
+  /* Typography — labels 11px / 0.08em / 55%, values mono + tabular */
   .stat-label {
-    @apply text-[9.5px] uppercase tracking-[0.2em] font-medium;
-    color: #4f5b6e;
+    @apply text-[11px] uppercase tracking-label font-medium;
+    color: var(--c-label);
   }
   .stat-value {
-    @apply text-hud-text font-mono font-semibold tabular-nums;
+    @apply text-data font-mono font-semibold tabular-nums;
   }
 
   /* Ghost button */
   .btn {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 cursor-pointer;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.09);
-    color: #eaf1fb;
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-btn text-sm font-medium transition-colors duration-150 cursor-pointer;
+    background: var(--c-raised);
+    border: 1px solid var(--c-border);
+    color: var(--c-data);
   }
   .btn:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(167,139,250,0.4);
-    transform: translateY(-1px);
+    background: rgb(139 127 232 / 0.1);
+    border-color: rgb(139 127 232 / 0.4);
   }
-  .btn:active { transform: translateY(0); }
 
-  /* Gradient primary button */
+  /* Primary button — flat brand fill (chrome only) */
   .btn-accent {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all duration-150 cursor-pointer;
-    background:
-      radial-gradient(circle at 30% 0%, rgba(255,255,255,0.22), transparent 60%),
-      linear-gradient(135deg, #a78bfa, #6d4dff);
-    border: none;
-    color: white;
-    box-shadow: 0 8px 26px -6px rgba(167,139,250,0.5), inset 0 1px 0 rgba(255,255,255,0.22);
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-btn text-sm font-semibold transition-colors duration-150 cursor-pointer;
+    background: var(--c-brand);
+    border: 1px solid transparent;
+    color: #0b0e11;
   }
   .btn-accent:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 32px -6px rgba(167,139,250,0.65), inset 0 1px 0 rgba(255,255,255,0.22);
+    background: #9c92ec;
   }
 
-  /* Small icon-only buttons — glass gradient matching card background */
+  /* Small icon-only buttons over the map */
   .map-btn {
-    @apply flex items-center justify-center transition-all duration-150 cursor-pointer rounded-lg;
-    background: linear-gradient(135deg, rgba(28,34,48,0.52), rgba(10,14,20,0.42));
-    border: 1px solid rgba(255,255,255,0.07);
-    color: #eaf1fb;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 0 0 rgba(255,255,255,0.05) inset;
+    @apply flex items-center justify-center transition-colors duration-150 cursor-pointer rounded-btn backdrop-blur-md;
+    background: rgb(22 25 31 / 0.88);
+    border: 1px solid var(--c-border);
+    color: var(--c-data);
   }
   .map-btn:hover {
-    background: linear-gradient(135deg, rgba(40,50,72,0.65), rgba(16,22,34,0.55));
-    border-color: rgba(167,139,250,0.4);
-    color: #a78bfa;
-    box-shadow: 0 0 18px -4px rgba(167,139,250,0.35), 0 4px 16px rgba(0,0,0,0.3), 0 1px 0 0 rgba(255,255,255,0.06) inset;
+    background: var(--c-raised);
+    border-color: rgb(139 127 232 / 0.5);
+    color: var(--c-brand);
   }
 
   .pill {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium;
-    border: 1px solid rgba(255,255,255,0.11);
-    background: rgba(255,255,255,0.03);
-    color: #8fa0b8;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill text-[11px] font-medium;
+    border: 1px solid var(--c-border);
+    background: rgb(29 34 43 / 0.5);
+    color: var(--c-label);
   }
   .disabled-field {
     @apply opacity-30 grayscale pointer-events-none;
@@ -113,24 +126,22 @@ body,
 
   /* Status pill (TopHud) */
   .status-pill {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px]
-           font-semibold tracking-wider uppercase;
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill text-[10px]
+           font-semibold tracking-label uppercase;
   }
 
   /* Info card (right panel + bottom stat cards) */
   .card {
-    @apply backdrop-blur-xl rounded-xl px-3 pt-2.5 pb-3;
-    background: linear-gradient(135deg, rgba(28,34,48,0.52), rgba(10,14,20,0.42));
-    border: 1px solid rgba(255,255,255,0.07);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.42),
-                0 1px 0 0 rgba(255,255,255,0.05) inset;
+    @apply backdrop-blur-md rounded-card px-3 pt-2.5 pb-3 shadow-overlay;
+    background: rgb(22 25 31 / 0.88);
+    border: 1px solid var(--c-border);
   }
   .card-header {
     @apply flex items-center justify-between mb-2.5;
   }
   .card-title {
-    @apply text-[9.5px] font-semibold tracking-[0.2em] uppercase;
-    color: #4f5b6e;
+    @apply text-[11px] font-semibold tracking-label uppercase;
+    color: var(--c-label);
   }
   .stat-grid {
     @apply grid grid-cols-2 gap-x-3 gap-y-2.5;
@@ -139,94 +150,94 @@ body,
   .stat-row  { @apply flex items-baseline gap-1; }
   .stat-num  {
     @apply text-xl font-mono font-semibold tabular-nums leading-none;
-    color: #eaf1fb;
+    color: var(--c-data);
   }
   .stat-unit {
     @apply text-[10px] font-medium leading-none;
-    color: #4f5b6e;
+    color: var(--c-unit);
   }
 
   /* Status badges */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold
-           tracking-wider uppercase;
+    @apply inline-flex items-center px-2 py-0.5 rounded-pill text-[9px] font-bold
+           tracking-label uppercase;
     border: 1px solid;
   }
   .badge-ok {
-    @apply text-hud-ok;
-    background: rgba(52,211,153,0.12);
-    border-color: rgba(52,211,153,0.28);
+    color: var(--c-good);
+    background: rgb(52 211 153 / 0.12);
+    border-color: rgb(52 211 153 / 0.28);
+  }
+  .badge-neutral {
+    color: var(--c-unit);
+    background: rgb(232 234 237 / 0.06);
+    border-color: rgb(232 234 237 / 0.18);
   }
   .badge-warn {
-    @apply text-hud-warn;
-    background: rgba(251,191,36,0.12);
-    border-color: rgba(251,191,36,0.28);
+    color: var(--c-caution);
+    background: rgb(251 191 36 / 0.12);
+    border-color: rgb(251 191 36 / 0.28);
   }
   .badge-danger {
-    @apply text-hud-danger;
-    background: rgba(251,113,133,0.12);
-    border-color: rgba(251,113,133,0.28);
+    color: var(--c-critical);
+    background: rgb(248 113 113 / 0.12);
+    border-color: rgb(248 113 113 / 0.28);
   }
 
-  /* Gradient progress-bar fills — used inside h-* track containers */
+  /* Progress-bar fills — flat status colors, no glow.
+     Class names kept (bar-ok/warn/danger/mute/accent): generated dynamically. */
   .bar-ok {
-    @apply h-full rounded-full;
-    background: linear-gradient(90deg, #34d399, #6ee7b7);
-    box-shadow: 0 0 10px rgba(52,211,153,0.4);
+    @apply h-full rounded-pill;
+    background: var(--c-good);
     transition: width 0.3s ease;
   }
   .bar-warn {
-    @apply h-full rounded-full;
-    background: linear-gradient(90deg, #fbbf24, #fcd34d);
-    box-shadow: 0 0 10px rgba(251,191,36,0.4);
+    @apply h-full rounded-pill;
+    background: var(--c-caution);
     transition: width 0.3s ease;
   }
   .bar-danger {
-    @apply h-full rounded-full;
-    background: linear-gradient(90deg, #fb7185, #fda4af);
-    box-shadow: 0 0 10px rgba(251,113,133,0.4);
+    @apply h-full rounded-pill;
+    background: var(--c-critical);
     animation: bar-blink 1.6s ease-in-out infinite;
     transition: width 0.3s ease;
   }
   .bar-mute {
-    @apply h-full rounded-full bg-hud-border;
+    @apply h-full rounded-pill;
+    background: var(--c-border);
     transition: width 0.3s ease;
   }
   .bar-accent {
-    @apply h-full rounded-full;
-    background: linear-gradient(90deg, #a78bfa, #22d3ee);
-    box-shadow: 0 0 8px rgba(167,139,250,0.35);
+    @apply h-full rounded-pill;
+    background: var(--c-brand);
     transition: width 0.1s ease;
   }
 
   /* Transport interface chip (TopHud) */
   .transport-chip {
-    @apply flex items-center gap-2 rounded-lg px-3 cursor-pointer;
-    height: 36px;
-    background: linear-gradient(135deg, rgba(28,34,48,0.52), rgba(10,14,20,0.42));
-    border: 1px solid rgba(255,255,255,0.07);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 1px 0 0 rgba(255,255,255,0.05) inset;
+    @apply flex items-center gap-2 rounded-btn px-3.5 cursor-pointer backdrop-blur-md;
+    height: 34px;
+    background: rgb(22 25 31 / 0.88);
+    border: 1px solid var(--c-border);
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   .transport-chip:hover:not(:disabled) {
-    border-color: rgba(167,139,250,0.4);
+    border-color: rgb(139 127 232 / 0.4);
   }
   .transport-chip:disabled {
     cursor: default;
   }
   .transport-chip-open {
-    border-color: rgba(167,139,250,0.55) !important;
-    background: linear-gradient(135deg, rgba(40,50,72,0.65), rgba(16,22,34,0.55)) !important;
+    border-color: rgb(139 127 232 / 0.55) !important;
+    background: var(--c-raised) !important;
   }
   /* Dropdown option — selected state */
   .transport-option-active {
-    background: linear-gradient(180deg, rgba(167,139,250,0.14), rgba(167,139,250,0.06));
-    box-shadow: inset 0 0 0 1px rgba(167,139,250,0.28);
+    background: rgb(139 127 232 / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(139 127 232 / 0.28);
   }
   .transport-select {
-    @apply outline-none cursor-pointer text-hud-text;
+    @apply outline-none cursor-pointer text-data;
     appearance: none;
     -webkit-appearance: none;
     background: transparent;
@@ -238,20 +249,20 @@ body,
     flex: 1;
   }
   .transport-select option {
-    background: #0c1320;
-    color: #eaf1fb;
+    background: var(--c-card);
+    color: var(--c-data);
   }
 
   /* Settings form input/select */
   .settings-input {
-    @apply rounded-md px-3 py-1.5 text-sm font-mono outline-none transition-all;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.09);
-    color: #eaf1fb;
+    @apply rounded-btn px-3 py-1.5 text-sm font-mono outline-none transition-all;
+    background: var(--c-raised);
+    border: 1px solid var(--c-border);
+    color: var(--c-data);
   }
   .settings-input:focus {
-    border-color: rgba(167,139,250,0.5);
-    box-shadow: 0 0 0 3px rgba(167,139,250,0.12);
+    border-color: rgb(139 127 232 / 0.5);
+    box-shadow: 0 0 0 3px rgb(139 127 232 / 0.12);
   }
 }
 
@@ -271,8 +282,8 @@ body,
 /* OpenLayers dark tweaks */
 .ol-zoom { display: none; }
 .ol-attribution {
-  background: rgba(5, 7, 9, 0.78) !important;
-  color: #4f5b6e !important;
+  background: rgb(11 14 17 / 0.8) !important;
+  color: var(--c-label) !important;
   font-size: 10px;
 }
-.ol-attribution a { color: #4f5b6e !important; }
+.ol-attribution a { color: var(--c-label) !important; }
